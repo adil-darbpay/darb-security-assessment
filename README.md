@@ -1,6 +1,6 @@
 # Darb security engineering assessment
 
-For mid-level security engineer candidates. Assessment version 2.0.
+For mid-level security engineer candidates. Assessment version 2.1.
 
 We would like you to review a service, recommend two security changes, and talk us through your decisions. We want to see how you use evidence, decide what matters most, and keep the service working while you improve its security. The final part asks you to explain a security issue to colleagues outside the security team.
 
@@ -45,7 +45,7 @@ Choose **one change to identity or privileged access** and **one change to WAF, 
 2. The smallest useful change, affected users/traffic and owner.
 3. A legitimate action that must succeed, and the evidence of success.
 4. An unwanted action that must fail, and the evidence of denial.
-5. Dependencies, rollout and a measurable stop or rollback condition.
+5. Dependencies, rollout, a check of the effective live policy, and a measurable stop or rollback condition. Explain how the fix will survive the next routine deployment.
 6. Remaining exposure and an alternative you considered.
 
 Describe expected results. Do not run commands, deploy resources or generate attack traffic. Respect the case's service-availability and recovery requirements.
@@ -54,7 +54,7 @@ Describe expected results. Do not run commands, deploy resources or generate att
 
 - Build a **four-event timeline** using supplied IDs. Separate observations from explanations you still need to verify; the events need not have a common actor.
 - State your **first three response actions**, in order, including why, who should act and what evidence to preserve or obtain.
-- Describe **one detection**: data source and fields, condition or correlation, a legitimate explanation, a validation case and response owner. Plain language is sufficient.
+- Describe **one detection**: data source and fields, triggering condition, a legitimate explanation and response owner. Explain how a test would prove the alert reaches that person within an expected time, and how you would notice missing logs or failed delivery. Identify any sensitive fields you would exclude or redact. Plain language is sufficient.
 
 If you cannot tell whether an account was compromised or data was accessed, say so and identify the evidence you need.
 
@@ -88,9 +88,9 @@ We use the same core exercises, time allowance and scoring criteria for each can
 | --- | --- | --- |
 | 0–5 | Setup | Confirm scope, resources and priorities. |
 | 5–15 | Defend your submission | Reconstruct one finding, its evidence and the reason for its priority. |
-| 15–35 | Identity and workforce access | Trace a principal through groups and permissions; respond to changed access/device evidence. |
-| 35–50 | Safe control change | Predict permitted and denied requests; revise a change after an operational constraint. |
-| 50–65 | Incident and operations | Distinguish facts from hypotheses, choose response actions, and explain record-level authorization and detection/recovery tests. |
+| 15–35 | Identity and workforce access | Trace access before approval, during elevation and after expiry or revocation; respond to changed group, session or device evidence. |
+| 35–50 | Safe control change | Predict permitted and denied requests, including record access; check that a deployed fix remains effective. |
+| 50–65 | Incident and operations | Separate facts from hypotheses, trace an alert to its responder, and discuss a release or secret-access decision and a recovery check. |
 | 65–75 | Cloud portability | Preserve security outcomes when implementation details change. |
 | 75–85 | Awareness | Deliver your five-minute lesson and respond to staff questions. |
 | 85–90 | Wrap-up | Clarifications and candidate questions. |
@@ -112,11 +112,11 @@ The assessment is scored out of **100: 20 points for preparation and 80 for obse
 
 | Live competency | Weight | Expected mid-level evidence |
 | --- | ---: | --- |
-| Identity, groups and privileged access | 16 | Explains effective permissions, scoped elevation and how to verify access changes. |
-| WAF, network and application ingress | 12 | Traces the enforcement path and preserves legitimate traffic while closing unwanted access. |
+| Identity, groups and privileged access | 16 | Explains effective permissions and verifies approval, elevation, expiry/revocation and recovery access. |
+| WAF, network and application ingress | 12 | Traces the effective enforcement path, preserves legitimate traffic and prevents routine deployment from undoing the fix. |
 | Workspace and device context | 12 | Reasons about policy scope, device conditions, administrative access and app grants. |
-| Incident assessment and detection | 12 | Separates fact from inference, chooses proportionate actions and specifies useful detection evidence. |
-| Internal application, data and operations | 8 | Distinguishes authentication from authorization and considers workload identity, data boundaries and recoverability. |
+| Incident assessment and detection | 12 | Separates fact from inference, chooses proportionate actions and tests collection, matching and alert delivery. |
+| Internal application, data and operations | 8 | Distinguishes authentication from authorization; reasons about release integrity or secret access, and recoverability. |
 | Cloud portability | 8 | Defines outcomes and tests rather than assuming products are equivalent. |
 | Staff awareness | 8 | Teaches a concrete behavior, handles mistakes constructively and checks understanding. |
 | Communication and prioritization | 4 | Makes a clear recommendation, states uncertainty and updates it when evidence changes. |
@@ -138,6 +138,8 @@ You can look up a product detail, acknowledge a gap or correct an earlier answer
 <summary>Consistent evaluation and hiring decisions</summary>
 
 Use the same case version, core prompts, additional facts and time allowances within a round. Agree any live changes before the round begins. Ask comparable probes such as “show the access path,” “what would disprove your conclusion?” and “which legitimate action must still work?” Do not improvise unrelated puzzles for different candidates.
+
+In the identity exercise, ask what must be demonstrated before retiring an existing access route. In the control-change exercise, introduce this fact to every candidate: “The approved policy differs from the running configuration.” Ask how they establish what is enforced and keep a routine deployment from undoing the correction. For C09, choose either release integrity or secret access before the round; use the same choice for all candidates. These are discussion prompts, not extra written deliverables.
 
 Where possible, two assessors record evidence and score independently before discussing a recommendation. Record the observed behavior, relevant IDs and substantive hints. Mark an exercise that could not be observed as unassessed and resolve it before making a score-based recommendation. Do not double-penalize the same issue across competencies without distinct evidence.
 
@@ -168,6 +170,8 @@ Reviewed 2 October 2026. The design uses representative work tasks, observable b
 | [ScubaGoggles limitations](https://github.com/cisagov/ScubaGoggles/blob/main/docs/usage/Limitations.md) | Include evidence gaps and uncertain review results that require manual validation. |
 | [OWASP CRS rules](https://github.com/coreruleset/coreruleset), [tuning guidance](https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/) and [go-ftw test format](https://github.com/coreruleset/go-ftw#test-file-format) | Ask for legitimate and unwanted request outcomes and safe tuning. |
 | [Sigma cloud rule example](https://github.com/SigmaHQ/sigma/blob/master/rules/cloud/gcp/audit/gcp_firewall_rule_modified_or_deleted.yml) | Assess data requirements, expected administrative activity and detection validation. |
+| [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) and [secrets management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | Check telemetry failures, sensitive log fields, scoped secret access and safe credential changes. |
+| [SLSA artifact verification](https://slsa.dev/spec/v1.2/verifying-artifacts) | Connect the released software to a trusted build and the artifact approved for deployment. |
 
 Technical references include [Google IAM propagation](https://docs.cloud.google.com/iam/docs/access-change-propagation), [IAP identity verification](https://docs.cloud.google.com/iap/docs/signed-headers-howto), [Workspace context-aware access](https://knowledge.workspace.google.com/admin/security/protect-your-business-with-context-aware-access), [AWS identity practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html) and [Azure privileged access](https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure). Check actual provider capabilities before real-world use.
 

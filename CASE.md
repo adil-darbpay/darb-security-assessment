@@ -1,6 +1,6 @@
 # Security engineering case study
 
-Case study version 2.0. All details are fictional.
+Case study version 2.1. All details are fictional.
 
 [Instructions and evaluation criteria](README.md)
 
@@ -22,6 +22,7 @@ The systems, identities and events are invented for the exercise. They do not de
 | R04 | Legitimate customer transactions must remain available, including names containing apostrophes. Login-abuse protection must continue to work. |
 | R05 | Operations must retain a controlled administrative recovery route. Health checks must work without returning customer information. |
 | R06 | Security changes require an owner, verification and a rollback decision. Ongoing access concerns may justify targeted containment before a permanent change is ready. |
+| R07 | Workloads may access only the credentials needed for their function. Production must run the reviewed and approved release. |
 
 Assume the application owner and IT operations lead can help validate a change in staging and through a limited production pilot. If your recommendation would interrupt service, explain why and how you would limit the impact.
 
@@ -137,16 +138,22 @@ The export does not include how stale or unknown device signals are handled. API
 
 **C09 · Delivery and operating controls**
 
-Production changes to the application repository require review and dependency checks. CI nevertheless deploys using a service-account key stored in repository secrets; the key is 410 days old. Its role is shown in C02. Workload federation has not been configured. The application uses TLS and the database is encrypted at rest. A current operating-system patch-status report is not included.
+| Area | Evidence supplied |
+| --- | --- |
+| Build checks | Application changes require review and dependency checks before a release build. |
+| Deployment identity | CI uses a service-account key stored in repository secrets. Its role is shown in C02; workload federation is not configured. |
+| Release selection | Approval records a build ID. Deployment fetches the package labelled `approved`; that label can be reassigned. The deployment step does not compare the downloaded package with the approved build. |
+| Runtime secrets | The API and a reporting worker have separate identities. Both can read a single secret containing the API's database credential and the worker's report-service credential. The owner confirms each workload needs only its own credential. Both load credentials at startup; rotation-test evidence is absent. |
+| Operating controls | The application uses TLS and the database is encrypted at rest. A current operating-system patch-status report is not included. |
 
 **C10 · Audit and recovery evidence**
 
 | Area | Evidence supplied |
 | --- | --- |
 | Audit coverage | Administrative and WAF request logs are enabled. Storage object-read auditing is not enabled. |
-| Export | Collaboration audit events are exported daily. The supplied excerpt covers only selected events. |
+| Export | Collaboration audit events are exported daily. No recent collection-health test is supplied. The excerpt covers only selected events. |
 | Evidence protection | The audit archive is inside the production administrative boundary; production administrators can delete it. |
-| Response ownership | An operations contact is assigned, but no tested security-alert escalation procedure is attached. |
+| Response ownership | An operations contact is assigned. No record traces a test event from collection through rule matching, notification delivery and responder acknowledgement. |
 | Backups | Encrypted backups run daily. The latest job succeeded. The last documented restoration exercise was six months ago; current recovery objectives are not supplied. |
 
 ### Exhibit E — Cloud portability
